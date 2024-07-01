@@ -1,0 +1,35 @@
+{
+  "name": "iot-firmware-update",
+  "version": "0.1.0",
+  "bin": {
+    "iot-firmware-update": "lib/bin/iot-firmware-update.ts"
+  },
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc -w",
+    "test": "jest",
+    "cdk": "cdk",
+    "deploy": "cdk deploy",
+    "destroy": "cdk destroy"
+  },
+  "devDependencies": {
+    "@types/jest": "^27.0.0",
+    "@types/node": "^14.18.63",
+    "jest": "^27.0.0",
+    "ts-jest": "^27.0.0",
+    "ts-node": "^10.0.0",
+    "typescript": "^4.3.5"
+  },
+  "dependencies": {
+    "@aws-cdk/aws-dynamodb": "^1.123.0",
+    "@aws-cdk/aws-iam": "^1.123.0",
+    "@aws-cdk/aws-iot": "^1.123.0",
+    "@aws-cdk/aws-lambda": "^1.123.0",
+    "@aws-cdk/aws-logs": "^1.123.0",
+    "@aws-cdk/aws-stepfunctions": "^1.123.0",
+    "@aws-cdk/aws-stepfunctions-tasks": "^1.123.0",
+    "@aws-cdk/core": "^1.123.0",
+    "aws-cdk-lib": "^2.0.0",
+    "constructs": "^10.0.0"
+  }
+}
