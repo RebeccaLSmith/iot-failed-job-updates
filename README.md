@@ -6,6 +6,10 @@ This project deploys an AWS CDK stack for managing IoT firmware updates and hand
 
 The solution orchestrates the process of updating IoT device firmware currently leveraging IoT Continous Jobs with DynamicThingGroups and managing any failures that may occur. IoT Jobs has a hard retry limit of 10. Sometimes intermitent connectivity can cause a device to get stuck in a DynamicThingGroup when updating a device due to the hard limit in Continous Job Retries. With this solution devices sending data into IoT Core are routed using IoT Rules on the topic iot/device/data for 'failed' status. Rules trigger logging in Cloudwatch to record the error and starts a step function workflow. Deivce attributes are stored in a DynamoDB table, and retires are recorded in a second table. Once a device reaches the retry limit of 10 the attributes are dynamically changed, the retry counter is reset to zero and the reset count is recorded as 1. This change causes the device to be removed from the DynamicThingGroup and reseets the hard limit in Continous Jobs to 0. After a period of time, 24 hours in this case, the device attirbutes are restored causing the device to be dynamically added back to the DynamicThingGroup and Continous Job Updates are resumed. If a device cycles through 10 retries a second time, the device attributes are changed, causing the device to once again be dynamically removed from the DynamicThingGroup. The device is then added to a StaticThingGroup and an SNS notification is sent to notify the need for manual intervention. 
 
+## Architecture
+
+![Architecture](/resources/architecture/MICD_BASIC_ARCH_WITH_KEY.png)
+
 It includes the following key components:
 
 ### Lambda Functions
