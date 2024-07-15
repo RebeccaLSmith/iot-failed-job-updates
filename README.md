@@ -10,7 +10,7 @@ The solution orchestrates the process of updating IoT device firmware currently 
 
 ## Architecture
 
-![Architecture](/resources/architecture/MICD_BASIC_ARCH_WITH_KEY.png)
+![Architecture](/resources/Architecture/FirmwareUpdateRetries.png)
 
 It includes the following key components:
 
