@@ -45,7 +45,7 @@ Two DynamoDB tables are used. If you do not want to destroy these resources upon
 
 ## IoT Core Thing Group
 
-- '`ailedToUPdate`: Static Thing Group to hold devices that failed to update after the second cycle. 
+- '`FailedToUPdate`: Static Thing Group to hold devices that failed to update after the second cycle. 
 
 ### IAM Roles and Policies
 
