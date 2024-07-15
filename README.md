@@ -1,3 +1,5 @@
+
+- **[LinkedIn: Rebecca Smith](https://www.linkedin.com/in/rebecca-smith101/)**
 # iot-firmware-update
 
 This project deploys an AWS CDK stack for managing IoT firmware updates and handling failures. The solution includes several AWS services such as Lambda functions, DynamoDB tables, Step Functions, and IoT rules to create a robust workflow for handling firmware update processes for IoT devices.
