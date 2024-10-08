@@ -96,7 +96,7 @@ export class IotFirmwareUpdateStack extends cdk.Stack {
       }
     });
 
-       const restoreDeviceAttributesLambda = new lambda.Function(this, 'RestoreDeviceAttributesLambda', {
+    const restoreDeviceAttributesLambda = new lambda.Function(this, 'RestoreDeviceAttributesLambda', {
       functionName: 'RestoreDeviceAttributes',
       runtime: lambda.Runtime.PYTHON_3_9,
       code: lambda.Code.fromAsset(lambdaPath),
