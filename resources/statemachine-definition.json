@@ -1,0 +1,216 @@
+{
+    "Comment": "IoT Firmware Update Failure Workflow",
+    "StartAt": "TransformInput",
+    "TimeoutSeconds": 90000,
+    "States": {
+      "TransformInput": {
+        "Type": "Pass",
+        "Parameters": {
+          "deviceId.$": "$._id_",
+          "Timestamp.$": "$.timestamp",
+          "status.$": "$.status",
+          "model.$" : "$.model",
+          "FW.$" : "$.FW",
+          "snsTopicArn": "$.{SNS_TOPIC_ARN}"
+        },
+        "Next": "CheckIfDeviceExists"
+      },
+      "CheckIfDeviceExists": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:CheckIfDeviceExists",
+        "Next": "ChoiceDeviceExists",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "ChoiceDeviceExists": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.deviceExists",
+            "BooleanEquals": true,
+            "Next": "IncrementRetryCounter"
+          },
+          {
+            "Variable": "$.deviceExists",
+            "BooleanEquals": false,
+            "Next": "StoreDeviceAttributes"
+          }
+        ],
+        "Default": "HandleError"
+      },
+      "StoreDeviceAttributes": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:StoreDeviceAttributes",
+        "Next": "CreateDeviceRecord",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "CreateDeviceRecord": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:CreateDeviceRecord",
+        "Next": "IncrementRetryCounter",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "IncrementRetryCounter": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:IncrementRetryCounter",
+        "Next": "CheckRetryCount",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "CheckRetryCount": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.RetryCounter",
+            "NumericLessThan": 10,
+            "Next": "EndState"
+          },
+          {
+            "Variable": "$.RetryCounter",
+            "NumericGreaterThanEquals": 10,
+            "Next": "ChoiceResetRetryCount"
+          }
+        ],
+        "Default": "HandleError"
+      },
+      "ChoiceResetRetryCount": {
+        "Type": "Choice",
+        "Choices": [
+          {
+            "Variable": "$.ResetRetryCount",
+            "NumericEquals": 0,
+            "Next": "ResetRetryCountAndMoveOut"
+          },
+          {
+            "Variable": "$.ResetRetryCount",
+            "NumericEquals": 1,
+            "Next": "ResetRetryCountToFailedUpdate"
+          }
+        ],
+        "Default": "HandleError"
+      },
+      "ResetRetryCountAndMoveOut": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:ResetRetryCountAndMoveOut",
+        "Next": "Wait24Hours",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "Wait24Hours": {
+        "Type": "Wait",
+        "Seconds": 86400,
+        "Next": "RestoreDeviceAttributes"
+      },
+      "RestoreDeviceAttributes": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:RestoreDeviceAttributes",
+        "Next": "EndState",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "ResetRetryCountToFailedUpdate": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:ResetRetryCountToFailedUpdate",
+        "Next": "Wait15Minutes",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "Wait15Minutes": {
+        "Type": "Wait",
+        "Seconds": 900,
+        "Next": "MoveDeviceToFailedGroup"
+      },
+      "MoveDeviceToFailedGroup": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:MoveDeviceToFailedGroup",
+        "Next": "SendAlertIfNeeded",
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "SendAlertIfNeeded": {
+        "Type": "Task",
+        "Resource": "arn:aws:lambda:${Region}:${AccountNumber}:function:SendSNSNotification",
+          "Parameters":{
+            "deviceId.$": "$.deviceId",
+            "snsTopicArn": "arn:aws:sns:${Region}:${AccountNumber}:FailedFirmwareUpdate.fifo"
+          },
+        "End": true,
+        "Catch": [
+          {
+            "ErrorEquals": [
+              "States.ALL"
+            ],
+            "Next": "HandleError"
+          }
+        ],
+        "TimeoutSeconds": 300
+      },
+      "EndState": {
+        "Type": "Pass",
+        "End": true
+      },
+      "HandleError": {
+        "Type": "Fail",
+        "Error": "StateMachineError",
+        "Cause": "An error occurred in the state machine execution."
+      }
+    }
+  }
